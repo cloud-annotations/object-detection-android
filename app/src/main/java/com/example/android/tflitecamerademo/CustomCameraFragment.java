@@ -4,9 +4,11 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.TextureView;
 import android.view.View;
@@ -59,25 +61,40 @@ public class CustomCameraFragment extends CameraFragment {
             Bitmap scaled = Bitmap.createScaledBitmap(bitmap, ImageClassifier.DIM_IMG_SIZE_X,  ImageClassifier.DIM_IMG_SIZE_Y, false);
             List<Prediction> predictions = mClassifier.classifyFrame(scaled);
 
+            bitmap = Bitmap.createScaledBitmap(bitmap,1298, bitmap.getHeight(),false);
+            float dpi = getResources().getDisplayMetrics().density;
+
             Log.d("CameraFrag", "PREDICTING");
             Canvas canvas = new Canvas(bitmap);
             Paint paint = new Paint();
-            paint.setColor(Color.BLUE);
+            paint.setColor(Color.rgb(36,101,255));
             paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(6);
+            paint.setAntiAlias(true);
+            paint.setStrokeWidth(dpi * 3);
+
+            Display display = view.getDisplay();
+            Point size = new Point();
+            display.getSize(size);
+            int width = size.x;
+            int height = size.y;
+            Log.e("Width", "" + width + ":" + canvas.getWidth() + ":" + bitmap.getWidth());
+            Log.e("height", "" + height + ":" + canvas.getHeight() + ":" + bitmap.getHeight());
+
+            Log.e("dpi", "" + dpi);
 
             for (Prediction prediction : predictions) {
                 Log.d("CameraFrag", prediction.label + ": " + prediction.score);
                 Log.d("CameraFrag", "[ " + prediction.bbox.x + ", " + prediction.bbox.width + ", " + prediction.bbox.y + ", " + prediction.bbox.height + " ]");
-                canvas.drawRect(prediction.bbox.x * canvas.getWidth(),
+                canvas.drawRoundRect(prediction.bbox.x * canvas.getWidth(),
                         prediction.bbox.y * canvas.getHeight(),
                         (prediction.bbox.x + prediction.bbox.width) * canvas.getWidth(),
                         (prediction.bbox.y + prediction.bbox.height) * canvas.getHeight(),
+                        dpi * 6, dpi * 6,
                         paint);
             }
-
+            canvas.drawBitmap(bitmap, 0, 0, null);
+            mPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mPreview.setImageBitmap(bitmap);
-            mPreview.draw(canvas);
             showPreview();
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
