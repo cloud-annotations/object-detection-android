@@ -69,14 +69,6 @@
             android:layout_height="match_parent"
             camera:quality="high" />
 
-        <ImageView
-            android:background="@drawable/focus"
-            android:adjustViewBounds="true"
-            android:contentDescription="@string/content_description"
-            android:layout_centerVertical="true"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent" />
-
         <Button
             android:id="@+id/capture_bitmap"
             android:background="@drawable/capture"

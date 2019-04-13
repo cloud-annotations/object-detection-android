@@ -3,8 +3,10 @@ package com.example.android.tflitecamerademo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.RectF;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
 import android.util.Log;
@@ -56,15 +58,19 @@ public class CustomCameraFragment extends CameraFragment {
             field.setAccessible(true);
             TextureView textureView = (TextureView) field.get(mCamera);
 
+            Matrix matrix = textureView.getTransform(null);
+            float[] values = new float[9];
+            matrix.getValues(values);
+            int newWidth =  textureView.getWidth() - (int)values[2] * 2;
+            int newHeight =  textureView.getHeight() - (int)values[5] * 2;
+
             // Get the image and classify it.
-            Bitmap bitmap = textureView.getBitmap();
+            Bitmap bitmap = textureView.getBitmap(newWidth, newHeight);
             Bitmap scaled = Bitmap.createScaledBitmap(bitmap, ImageClassifier.DIM_IMG_SIZE_X,  ImageClassifier.DIM_IMG_SIZE_Y, false);
             List<Prediction> predictions = mClassifier.classifyFrame(scaled);
 
-            bitmap = Bitmap.createScaledBitmap(bitmap,1298, bitmap.getHeight(),false);
             float dpi = getResources().getDisplayMetrics().density;
 
-            Log.d("CameraFrag", "PREDICTING");
             Canvas canvas = new Canvas(bitmap);
             Paint paint = new Paint();
             paint.setColor(Color.rgb(36,101,255));
@@ -77,14 +83,9 @@ public class CustomCameraFragment extends CameraFragment {
             display.getSize(size);
             int width = size.x;
             int height = size.y;
-            Log.e("Width", "" + width + ":" + canvas.getWidth() + ":" + bitmap.getWidth());
-            Log.e("height", "" + height + ":" + canvas.getHeight() + ":" + bitmap.getHeight());
-
-            Log.e("dpi", "" + dpi);
 
             for (Prediction prediction : predictions) {
                 Log.d("CameraFrag", prediction.label + ": " + prediction.score);
-                Log.d("CameraFrag", "[ " + prediction.bbox.x + ", " + prediction.bbox.width + ", " + prediction.bbox.y + ", " + prediction.bbox.height + " ]");
                 canvas.drawRoundRect(prediction.bbox.x * canvas.getWidth(),
                         prediction.bbox.y * canvas.getHeight(),
                         (prediction.bbox.x + prediction.bbox.width) * canvas.getWidth(),
@@ -92,7 +93,6 @@ public class CustomCameraFragment extends CameraFragment {
                         dpi * 6, dpi * 6,
                         paint);
             }
-            canvas.drawBitmap(bitmap, 0, 0, null);
             mPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mPreview.setImageBitmap(bitmap);
             showPreview();
