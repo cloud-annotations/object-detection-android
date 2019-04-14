@@ -14,6 +14,7 @@ import android.media.ThumbnailUtils;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextPaint;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -116,21 +117,38 @@ public class CustomCameraFragment extends Fragment {
             paint.setAntiAlias(true);
             paint.setStrokeWidth(dpi * 3);
 
-            Display display = view.getDisplay();
-            Point size = new Point();
-            display.getSize(size);
-            int width = size.x;
-            int height = size.y;
+            Paint labelPaint = new Paint();
+            labelPaint.setColor(Color.rgb(36,101,255));
+            labelPaint.setStyle(Paint.Style.FILL);
+            labelPaint.setAntiAlias(true);
+
+            TextPaint textPaint = new TextPaint();
+            textPaint.setAntiAlias(true);
+            textPaint.setTextSize(14 * dpi);
+            textPaint.setColor(Color.WHITE);
 
             for (Prediction prediction : predictions) {
-                Log.d("CameraFrag", prediction.label + ": " + prediction.score);
-                canvas.drawRoundRect(prediction.bbox.x * canvas.getWidth(),
-                        prediction.bbox.y * canvas.getHeight(),
-                        (prediction.bbox.x + prediction.bbox.width) * canvas.getWidth(),
-                        (prediction.bbox.y + prediction.bbox.height) * canvas.getHeight(),
-                        dpi * 6, dpi * 6,
-                        paint);
+                float boxLeft = prediction.bbox.x * canvas.getWidth();
+                float boxTop = prediction.bbox.y * canvas.getHeight();
+                float boxRight = (prediction.bbox.x + prediction.bbox.width) * canvas.getWidth();
+                float boxBottom =(prediction.bbox.y + prediction.bbox.height) * canvas.getHeight();
+
+                canvas.drawRoundRect(boxLeft, boxTop, boxRight, boxBottom,dpi * 6, dpi * 6, paint);
             }
+
+            // Draw text separately so it doesn't get overlapped by boxes.
+            for (Prediction prediction : predictions) {
+                float boxLeft = prediction.bbox.x * canvas.getWidth();
+                float boxTop = prediction.bbox.y * canvas.getHeight();
+
+                float width = textPaint.measureText(prediction.label) + 6 * dpi;
+                float height = -textPaint.ascent() + textPaint.descent();
+                float xOrigin = boxLeft;
+                float yOrigin = boxTop - height - 3 * dpi;
+                canvas.drawRect(xOrigin, yOrigin, xOrigin + width, yOrigin + height, labelPaint);
+                canvas.drawText(prediction.label, boxLeft + 3 * dpi, boxTop - 6 * dpi, textPaint);
+            }
+
             mPreview.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mPreview.setImageBitmap(bitmap);
             showPreview();
