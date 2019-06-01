@@ -5,6 +5,10 @@ import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.tensorflow.lite.Interpreter;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,10 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.tensorflow.lite.Interpreter;
 
 class BBox {
     float x;
@@ -95,8 +95,8 @@ class ImageClassifier {
         }
         ByteBuffer buffer = convertBitmapToByteBuffer(bitmap);
 
-        // The models output expects a shape of [1 x 1917 x 1 x labels_size + 1]
-        float[][][][] _boxPredictionsPointer_ = new float[1][NUM_ANCHORS][1][mLabelList.size() + 1];
+        // The models output expects a shape of [1 x 1917 x 1 x 4]
+        float[][][][] _boxPredictionsPointer_ = new float[1][NUM_ANCHORS][1][4];
         // The models output expects a shape of [1 x 1917 x labels_size + 1]
         float[][][] _classPredictionsPointer_ = new float[1][NUM_ANCHORS][mLabelList.size() + 1];
 
